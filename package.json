@@ -1,0 +1,11 @@
+{
+  "name": "marketing-platform",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "seed": "python scripts/extract_seed.py \"C:\\Users\\chris\\Downloads\\Marketing_Budget_2026_Enhanced.xlsx\" \"D:\\Projects\\Marketing\\data\\seed.json\"",
+    "build": "python scripts/prepare_public.py",
+    "serve": "firebase emulators:start --only hosting",
+    "deploy": "firebase deploy --only hosting,firestore"
+  }
+}

@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function hasProfile() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function role() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function canBootstrap() {
+      return !exists(/databases/$(database)/documents/platform/current);
+    }
+
+    function canWriteData() {
+      return role() in ['marketing', 'accounting', 'sales', 'service', 'admin'];
+    }
+
+    function canAdminUsers() {
+      return role() in ['marketing', 'admin'];
+    }
+
+    match /users/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || canAdminUsers());
+      allow create: if isSignedIn()
+        && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && (
+          (canBootstrap() && request.resource.data.role == 'admin')
+          || request.resource.data.role == 'executive'
+        );
+      allow update: if isSignedIn() && (
+        canAdminUsers()
+        || (
+          request.auth.uid == uid
+          && request.resource.data.uid == resource.data.uid
+          && request.resource.data.role == resource.data.role
+        )
+      );
+      allow delete: if false;
+    }
+
+    match /platform/{docId} {
+      allow read: if hasProfile();
+      allow write: if hasProfile() && canWriteData();
+    }
+  }
+}

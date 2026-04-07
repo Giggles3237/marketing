@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BMW/MINI Marketing Platform</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <p class="eyebrow">BMW/MINI of Pittsburgh</p>
+          <h1>Marketing Intelligence Platform</h1>
+        </div>
+        <nav class="nav" id="nav"></nav>
+        <section class="sidebar-card auth-card" id="user-panel"></section>
+        <section class="role-switcher">
+          <label for="role-select">Assigned role</label>
+          <select id="role-select" disabled>
+            <option value="executive">Executive</option>
+            <option value="marketing">Marketing Manager</option>
+            <option value="accounting">Accounting</option>
+            <option value="sales">Sales Manager</option>
+            <option value="service">Service Manager</option>
+            <option value="admin">Administrator</option>
+          </select>
+        </section>
+        <section class="sidebar-card" id="alert-panel"></section>
+      </aside>
+
+      <main class="main">
+        <header class="hero">
+          <div>
+            <p class="eyebrow">Phase 3 prototype</p>
+            <h2 id="page-title">Executive dashboard</h2>
+            <p id="page-subtitle">Live budget, actuals, ROI, and vendor operations in one place.</p>
+          </div>
+          <div class="hero-actions">
+            <input id="import-input" type="file" accept="application/json,.json" hidden />
+            <button id="import-button" class="secondary" hidden>Import Seed</button>
+            <button id="reset-button" class="secondary">Reset workspace</button>
+            <button id="signout-button" class="secondary" hidden>Sign out</button>
+            <button id="export-button">Export summary</button>
+          </div>
+        </header>
+        <section id="app"></section>
+      </main>
+    </div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
