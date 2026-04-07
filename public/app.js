@@ -33,8 +33,8 @@ const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
 
 const views = [
-  { id: "dashboard", label: "Executive Dashboard" },
   { id: "budgets", label: "Budget Management" },
+  { id: "dashboard", label: "Executive Dashboard" },
   { id: "actuals", label: "Actuals Entry" },
   { id: "roi", label: "ROI & Performance" },
   { id: "contracts", label: "Vendor Contracts" },
@@ -186,17 +186,28 @@ async function ensureUserProfile(user) {
     return profile;
   }
 
-  const currentDoc = await getDoc(platformDoc(CURRENT_DOC_ID));
-  const profile = {
+  const baseProfile = {
     uid: user.uid,
     email: user.email || "",
     displayName: user.displayName || user.email || "Unknown user",
-    role: currentDoc.exists() ? "executive" : "admin",
     createdAt: new Date().toISOString(),
     lastLoginAt: new Date().toISOString(),
   };
-  await setDoc(userRef, profile);
-  return profile;
+
+  // Try to bootstrap the first authenticated user as admin.
+  // Once Firestore is initialized, rules reject that role and we retry
+  // with the normal executive default for subsequent users.
+  const adminProfile = { ...baseProfile, role: "admin" };
+  try {
+    await setDoc(userRef, adminProfile);
+    return adminProfile;
+  } catch (error) {
+    if (error?.code !== "permission-denied") throw error;
+  }
+
+  const executiveProfile = { ...baseProfile, role: "executive" };
+  await setDoc(userRef, executiveProfile);
+  return executiveProfile;
 }
 
 async function loadPlatformData() {
@@ -562,7 +573,7 @@ function renderContracts() {
   const contracts = [...state.data.vendorContracts].sort((a, b) => daysUntil(a.contract_end) - daysUntil(b.contract_end));
   appEl.innerHTML = `
     <div class="grid two-up">
-      <section class="panel-card"><h3 class="section-title">Upcoming renewals</h3><div class="contract-list">${contracts.slice(0, 8).map((contract) => `<article><div class="chip ${daysUntil(contract.contract_end) <= 30 ? "danger" : "warning"}">${daysUntil(contract.contract_end)} days left</div><p><strong>${contract.vendor_name}</strong> · ${contract.departments}</p><p class="subtle">${formatDate(contract.contract_end)} · ${formatCurrency(contract.monthly_rate)} / month</p></article>`).join("")}</div></section>
+      <section class="panel-card"><h3 class="section-title">Upcoming renewals</h3><div class="contract-list">${contracts.slice(0, 8).map((contract) => `<article><div class="chip ${daysUntil(contract.contract_end) <= 30 ? "danger" : "warning"}">${daysUntil(contract.contract_end)} days left</div><p><strong>${contract.vendor_name}</strong> | ${contract.departments}</p><p class="subtle">${formatDate(contract.contract_end)} | ${formatCurrency(contract.monthly_rate)} / month</p></article>`).join("")}</div></section>
       <section class="highlight-card"><p class="eyebrow">Contract discipline</p><h3 class="section-title">Zero renewal surprises</h3><p>The PRD calls for 90-day and 30-day alerts, rate-change visibility, and a home for negotiation notes.</p><div class="summary-list" style="margin-top:16px;"><div class="summary-row"><span>Contracts inside 90 days</span><strong>${contracts.filter((item) => daysUntil(item.contract_end) <= 90).length}</strong></div><div class="summary-row"><span>Co-op eligible vendors</span><strong>${contracts.filter((item) => item.coop_eligible).length}</strong></div><div class="summary-row"><span>Average monthly rate</span><strong>${formatCurrency(average(contracts.map((item) => item.monthly_rate)))}</strong></div></div></section>
     </div>
     <section class="table-card" style="margin-top:18px;">
@@ -701,7 +712,7 @@ function renderROISummaryRows() {
     const sessions = sum(records.map((record) => record.sessions));
     const units = sum(records.map((record) => record.units_sold));
     const ros = sum(records.map((record) => record.service_ros));
-    return `<div class="summary-row"><span>${department}</span><span>${formatCurrency(leads ? netSpend / leads : 0)} CPL · ${formatCurrency(sessions ? netSpend / sessions : 0)} CPS · ${units ? formatCurrency(netSpend / units) : "n/a"} CPU · ${ros ? formatCurrency(netSpend / ros) : "n/a"} CPRO</span></div>`;
+    return `<div class="summary-row"><span>${department}</span><span>${formatCurrency(leads ? netSpend / leads : 0)} CPL | ${formatCurrency(sessions ? netSpend / sessions : 0)} CPS | ${units ? formatCurrency(netSpend / units) : "n/a"} CPU | ${ros ? formatCurrency(netSpend / ros) : "n/a"} CPRO</span></div>`;
   }).join("");
 }
 
