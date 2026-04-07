@@ -58,3 +58,32 @@ npm run deploy
 - The deployed app no longer serves `seed.json` publicly.
 - The first authenticated admin bootstrap is intended for internal setup of a new environment.
 - If you want full user management in the UI next, the next step is an admin user-management screen for promoting roles without using the Firebase console.
+
+## Automatic redeploys from GitHub
+
+This repo now includes a GitHub Actions workflow at `.github/workflows/deploy.yml`.
+
+Every push to `main` will redeploy Firebase Hosting and Firestore rules after GitHub is given one secret:
+
+- `FIREBASE_SERVICE_ACCOUNT`
+
+### GitHub secret setup
+
+1. In Firebase Console, open **Project settings** for `pittsburgh-marketing-platform`.
+2. Open **Service accounts**.
+3. Generate a new private key for a deploy-capable service account.
+4. In GitHub, open this repository's **Settings > Secrets and variables > Actions**.
+5. Create a new repository secret named `FIREBASE_SERVICE_ACCOUNT`.
+6. Paste the full JSON key contents into that secret.
+
+### After that
+
+Your deploy flow becomes:
+
+```powershell
+git add .
+git commit -m "Your change"
+git push
+```
+
+GitHub Actions will run the deploy automatically on pushes to `main`.
