@@ -25,14 +25,24 @@ service cloud.firestore {
       return role() in ['marketing', 'admin'];
     }
 
+    function isValidUserRole(userRole) {
+      return userRole in ['executive', 'marketing', 'accounting', 'sales', 'service', 'admin'];
+    }
+
     match /users/{uid} {
       allow read: if isSignedIn() && (request.auth.uid == uid || canAdminUsers());
       allow create: if isSignedIn()
-        && request.auth.uid == uid
         && request.resource.data.uid == uid
+        && isValidUserRole(request.resource.data.role)
         && (
-          (canBootstrap() && request.resource.data.role == 'admin')
-          || request.resource.data.role == 'executive'
+          (
+            request.auth.uid == uid
+            && (
+              (canBootstrap() && request.resource.data.role == 'admin')
+              || request.resource.data.role == 'executive'
+            )
+          )
+          || canAdminUsers()
         );
       allow update: if isSignedIn() && (
         canAdminUsers()
