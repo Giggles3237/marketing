@@ -18,6 +18,23 @@ node server.js
 
 3. Open `http://localhost:3000`
 
+## Budget grid page guide
+
+If your day-to-day work is in the **Budget management** page, this is the quickest map of how it works:
+
+- **Main page renderer:** `renderBudgets()` in `public/app.js` draws the department drill-down grid, measure toggle (Budget / Actual / Variance), and annual lifecycle rollup table.
+- **Hierarchy behavior:** departments start collapsed and expand on demand; grouped rows (like VinSolutions and Events) are built in `groupedDepartmentEntries()` and rendered through `renderDepartmentGroup()` + `renderHierarchyEntry()`.
+- **Inline editing:** only leaf vendor rows are editable in the monthly grid. Inputs are produced by `monthlyGridCell()` and updates flow through `handleBudgetGridInput()`.
+- **Lifecycle-driven budget projection:** annual rollup controls (Added, Cancelled, Monthly charge) write through `handleLifecycleInput()`, then `applyLifecycleProjection()` repopulates monthly budget values for active months.
+- **Totals and summaries:** department cards and row totals come from `computeDepartmentSummary()`, `aggregateRows()`, and `monthlyMeasureValue()`.
+- **State model:** UI state for this page is held in `state.budgetGrid` (selected department, selected measure, and expanded row IDs), then persisted through the app's local state save flow.
+
+### Primary files for budget-grid changes
+
+- `public/app.js` — page rendering, hierarchy logic, edit handlers, lifecycle projection, and totals.
+- `public/styles.css` — budget grid layout, sticky header, hierarchy row styling, and input color states.
+- `data/seed.json` — baseline vendor/department rows used to populate the page locally.
+
 ## Secure deployment flow
 
 1. Enable Google sign-in in Firebase Authentication.
